@@ -20,7 +20,6 @@ def get_custom_field_id():
     pass
 
 
-
 def get_subscribers_last30min(subscribers_dict):
     send_data_to = set()
     for sub in subscribers_dict:
