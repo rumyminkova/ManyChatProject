@@ -2,7 +2,7 @@ import requests
 from requests import HTTPError
 from datetime import datetime, timedelta
 from apscheduler.schedulers.blocking import BlockingScheduler
-from static_data import CUSTOM_FIELD_ID, MESSAGE_TO_SEND, CUSTOM_FIELD_VALUE, CUSTOM_FIELD_NAME
+from static_data import MESSAGE_TO_SEND, CUSTOM_FIELD_VALUE, CUSTOM_FIELD_NAME
 import auth_token
 import send_message
 
@@ -15,9 +15,13 @@ def convert(s):
     return datetime.strptime(s, '%Y-%m-%dT%H:%M:%S%z')
 
 
-def get_custom_field_id():
+def get_custom_field_id():  # returns CustomField Id
     response = requests.get("https://api.manychat.com/fb/page/getCustomFields", headers=header)
-    pass
+    custom_fields_list = response.json()['data']
+    for cf in custom_fields_list:
+        for k, v in cf.items():
+            if v == CUSTOM_FIELD_NAME:
+                return cf['id']
 
 
 def get_subscribers_last30min(subscribers_dict):
@@ -31,8 +35,8 @@ def get_subscribers_last30min(subscribers_dict):
 
 
 def get_new_subscribers():  # subscribers with CustomField = "999999999"
-    today = datetime.today().strftime('%Y-%m-%d')
-    params = {"field_id": CUSTOM_FIELD_ID, "field_value": CUSTOM_FIELD_VALUE}
+    custom_field_id = get_custom_field_id()
+    params = {"field_id": custom_field_id, "field_value": CUSTOM_FIELD_VALUE}
     response = requests.get("https://api.manychat.com/fb/subscriber/findByCustomField", params=params, headers=header)
     if response:
         return response.json()
@@ -55,9 +59,3 @@ def start_script():
 scheduler = BlockingScheduler()
 scheduler.add_job(start_script, 'interval', minutes=30, id='my_job_id')
 scheduler.start()
-
-
-
-
-
-
